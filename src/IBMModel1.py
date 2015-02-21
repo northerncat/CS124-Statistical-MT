@@ -32,7 +32,7 @@ def toRemove(string):
 def removePunct(line, ef):
 	""" This function removes the punctuation marks and numbers in a line represented by a list of tokens. """
 	line = line.split(" ")
-	punct = [",", ".", "/", "?", "|", "\\", "%", "$", "^", "&", "*", "(", ")", "-", ";", "&quot;", "&apos;s", "&#93;", "...", "&apos;t", ".\n", "&quot;\n", ":", "!", "¿"]
+	punct = [",", ".", "/", "?", "|", "\\", "%", "$", "^", "&", "*", "(", ")", "-", ";", "&quot;", "&apos;s", "&#93;", "...", "&apos;t", ".\n", "&quot;\n", ":", "!", "\xc2"]
 	stopWords = ["el", "a", "la", "los", "las", "de", "en", "un", "una", "y", "con", "del", "que", "por", "se"]
 	tokens = []
 	for i in range(len(line)):
@@ -87,6 +87,38 @@ def printT(t, fWords):
 		if maxProb > Decimal(1) / Decimal(len(fWords)):
 			print fWord + "<-" + bestWord + ": " + str(maxProb)
 
+def writeT(t, fWords):
+	outputT = open("../output/t", "w+")
+	for fWord in fWords:
+		bestWord = ""
+		maxProb = Decimal(-1)
+		for eWord in t:
+			if t[eWord][fWord] > maxProb:
+				bestWord = eWord
+				maxProb = t[eWord][fWord]
+		if maxProb > Decimal(1) / Decimal(len(fWords)):
+			outputT.write(fWord + " " + bestWord + " " + str(maxProb) + "\n")
+
+def readT(filename, corpus):
+	fWords = set()
+	eWords = set()
+	for (eLine, fLine) in corpus:
+		for eWord in eLine:
+			eWords.add(eWord)
+		for fWord in fLine:
+			fWords.add(fWord)
+	tFile = open(filename)
+	t = {}
+	for eWord in eWords:
+		t[eWord] = defaultdict(lambda: Decimal(1) / Decimal(len(fWords)))
+	for line in tFile:
+		tokens = line.split(" ")
+		fWord = tokens[0]
+		eWord = tokens[1]
+		prob = Decimal(float(tokens[2]))
+		t[eWord][fWord] = prob
+	return t
+
 def train(corpus, nIt):
 	""" This function performs the EM algorithm on the given corpus! For the E step, 
 		since it is unnecesary to store all of the alignments in memory (also inefficient),
@@ -115,7 +147,6 @@ def train(corpus, nIt):
 	# Loop component: performs E and M steps in each iteration, until iteration times out
 	for it in range(nIt):
 		print "ITERATION " + str(it)
-		printT(t, fWords)
 		# E step: goes through each sentence pair, and examine the alignments
 		for (eLine, fLine) in corpus:
 			m = len(fLine)
@@ -123,23 +154,20 @@ def train(corpus, nIt):
 			normConst = Decimal(1) / Decimal(pow(m, (l+1)))
 			# Use the equation that 
 			# p(fj, A | ei) = \frac{1}{(l+1)^m} * t(fj | ei) * \prod_{j' \neq j}^m\sum_{i'=1}^l * t(f_j' | e_i')
+			probProduct = Decimal(1)
 			sumProbs = []
 			for j in range(m):
 				sum = Decimal(0)
 				for i in range(l):
 					sum += Decimal(t[eLine[i]][fLine[j]])
+				probProduct *= sum
 				sumProbs.append(sum)
 			for i in range(l):
 				for j in range(m):
 					fj = fLine[j]
 					ei = eLine[i]
 					# probability of p(f_j | e_i) provided by all alignments in this sentence pair
-					prob = Decimal(1)
-					for jp in range(m):
-						if jp != j:
-							prob *= sumProbs[jp]
-					prob *= t[ei][fj] * normConst
-					runningT[ei][fj] += prob
+					runningT[ei][fj] += normConst* t[ei][fj] * probProduct / sumProbs[j]
 		# M step: since we have already accrued the probabilities from different alignments
 		# in the E step, we only need to normalize the total probability of one eWord to be 1 here
 		for eWord in runningT:
@@ -155,6 +183,5 @@ def train(corpus, nIt):
 			runningT[eWord] = defaultdict(Decimal)
 
 		print
-	printT(t, fWords)
-
+	writeT(t, fWords)
 	return t
