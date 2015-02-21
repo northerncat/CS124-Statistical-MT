@@ -156,18 +156,26 @@ def train(corpus, nIt):
 			# p(fj, A | ei) = \frac{1}{(l+1)^m} * t(fj | ei) * \prod_{j' \neq j}^m\sum_{i'=1}^l * t(f_j' | e_i')
 			probProduct = Decimal(1)
 			sumProbs = []
+			nZero = 0
 			for j in range(m):
 				sum = Decimal(0)
 				for i in range(l):
 					sum += Decimal(t[eLine[i]][fLine[j]])
-				probProduct *= sum
+				if sum != Decimal(0):
+					probProduct *= sum
+				elif nZero > 0:
+					probProduct = 0
+				else:
+					nZero += 1
 				sumProbs.append(sum)
 			for i in range(l):
 				for j in range(m):
 					fj = fLine[j]
 					ei = eLine[i]
 					# probability of p(f_j | e_i) provided by all alignments in this sentence pair
-					runningT[ei][fj] += normConst* t[ei][fj] * probProduct / sumProbs[j]
+					runningT[ei][fj] += normConst* t[ei][fj] * probProduct
+					if sumProbs[j] != Decimal(0):
+						runningT[ei][fj] /= sumProbs[j]
 		# M step: since we have already accrued the probabilities from different alignments
 		# in the E step, we only need to normalize the total probability of one eWord to be 1 here
 		for eWord in runningT:
@@ -175,7 +183,6 @@ def train(corpus, nIt):
 			for fWord in runningT[eWord]:
 				wordSum += runningT[eWord][fWord]
 			if wordSum == Decimal(0):
-				del runningT[eWord]
 				continue
 			for fWord in runningT[eWord]:
 				runningT[eWord][fWord] /= wordSum
