@@ -174,8 +174,9 @@ def train(corpus, nIt):
 			wordSum = Decimal(0)
 			for fWord in runningT[eWord]:
 				wordSum += runningT[eWord][fWord]
-			#if wordSum <= Decimal(0.00000000000001):
-			#	continue
+			if wordSum == Decimal(0):
+				del runningT[eWord]
+				continue
 			for fWord in runningT[eWord]:
 				runningT[eWord][fWord] /= wordSum
 		t = deepcopy(runningT)
