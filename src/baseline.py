@@ -60,12 +60,20 @@ def main():
 		sys.exit()
 	corpus = IBMModel1.readCorpus(sys.argv[1], sys.argv[2])
 	nIt = int(float(sys.argv[3]))
-	t = IBMModel1.train(corpus, nIt)
+	if len(sys.argv) > 6:
+		t = IBMModel1.readT(sys.argv[6], corpus)
+	else:
+		t = IBMModel1.train(corpus, nIt)
 	fTest = open(sys.argv[4], 'r')
 	output = open(sys.argv[5], 'w+')
 	for line in fTest:
 		eLine = baselineTranslate(t, line)
-		output.write(eLine + "\n")
+		if eLine.endswith('\n'):
+			output.write(eLine)
+		else:
+			output.write(eLine + '\n')
+	fTest.close()
+	output.close()
 
 if __name__ == "__main__":
 	main()
