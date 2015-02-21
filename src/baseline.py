@@ -9,6 +9,7 @@
 # This scripts performs the translation using only the probabilities obtained
 # from IBM Model 1.
 
+
 import IBMModel1
 import sys
 from decimal import Decimal
