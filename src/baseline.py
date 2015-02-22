@@ -56,7 +56,7 @@ def baselineTranslate(t, fText):
 
 def main():
 	if len(sys.argv) < 6:
-		print "Invoke the program with: python baseline.py eTrain fTrain nIteration eTest outputDir"
+		print "Invoke the program with: python baseline.py eTrain fTrain nIteration fTest outputDir"
 		sys.exit()
 	corpus = IBMModel1.readCorpus(sys.argv[1], sys.argv[2])
 	nIt = int(float(sys.argv[3]))

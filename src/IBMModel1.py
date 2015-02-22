@@ -37,6 +37,8 @@ def removePunct(line, ef):
 	tokens = []
 	for i in range(len(line)):
 		token = line[i].strip()
+		if token == "":
+			continue
 		if not toRemove(token):
 			if token[-1] == '\n':
 				tokens.append(token[:-1].lower())
@@ -151,7 +153,7 @@ def train(corpus, nIt):
 		for (eLine, fLine) in corpus:
 			m = len(fLine)
 			l = len(eLine)
-			normConst = Decimal(1) / Decimal(pow(m, (l+1)))
+			normConst = Decimal(1) / Decimal(pow((l+1), m))
 			# Use the equation that 
 			# p(fj, A | ei) = \frac{1}{(l+1)^m} * t(fj | ei) * \prod_{j' \neq j}^m\sum_{i'=1}^l * t(f_j' | e_i')
 			probProduct = Decimal(1)
@@ -161,7 +163,7 @@ def train(corpus, nIt):
 				sum = Decimal(0)
 				for i in range(l):
 					sum += Decimal(t[eLine[i]][fLine[j]])
-				if sum != Decimal(0):
+				if sum > Decimal(0.000000000000001):
 					probProduct *= sum
 				elif nZero > 0:
 					probProduct = 0
@@ -174,7 +176,7 @@ def train(corpus, nIt):
 					ei = eLine[i]
 					# probability of p(f_j | e_i) provided by all alignments in this sentence pair
 					runningT[ei][fj] += normConst* t[ei][fj] * probProduct
-					if sumProbs[j] != Decimal(0):
+					if sumProbs[j] > Decimal(0.000000000000001):
 						runningT[ei][fj] /= sumProbs[j]
 		# M step: since we have already accrued the probabilities from different alignments
 		# in the E step, we only need to normalize the total probability of one eWord to be 1 here
