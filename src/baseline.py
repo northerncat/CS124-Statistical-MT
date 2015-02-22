@@ -14,6 +14,22 @@ import IBMModel1
 import sys
 from decimal import Decimal
 
+def buildDictionary(t, corpus):
+	fWords = set()
+	for (eLine, fLine) in corpus:
+		for fWord in fLine:
+			fWords.add(fWord)
+	dictionary = {}
+	for fWord in fWords:
+		bestWord = ""
+		maxProb = Decimal(-1)
+		for eWord in t:
+			if t[eWord][fWord] > maxProb:
+				bestWord = eWord
+				maxProb = t[eWord][fWord]
+		dictionary[fWord] = eWord
+	return dictionary
+
 def translateWord(t, token):
 	""" This function searches the translation probability dictionary to find an
 		e word that maximizes p(token | eWord). """
@@ -25,7 +41,7 @@ def translateWord(t, token):
 			maxProb = t[eWord][token]
 	return bestWord
 
-def baselineTranslate(t, fText):
+def baselineTranslate(t, dictionary, fText):
 	""" Using the probabilities calculated from the EM algorithm, this function
 		performs translation on a piece of given foreign text. This is a baseline
 		function so it only considers the alignment in which the two sentences are
@@ -43,12 +59,12 @@ def baselineTranslate(t, fText):
 		if IBMModel1.toRemove(token.lower()):
 			eText.append(token)
 		else:
-			eToken = translateWord(t, token.lower())
-			# make first word of a sentence title case
-			if i == 0:
-				eToken = eToken[0].upper() + eToken[1:]
+			if token.lower() in dictionary:
+				eToken = dictionary[token.lower()]
+			else:
+				eToken = translateWord(t, token.lower())
 			# if the fWord points to NULL, jump to next word
-			elif eToken == "NULL":
+			if eToken == "NULL":
 				continue
 			eText.append(eToken)
 	eText = " ".join(eText)
@@ -64,10 +80,11 @@ def main():
 		t = IBMModel1.readT(sys.argv[6], corpus)
 	else:
 		t = IBMModel1.train(corpus, nIt)
+	dictionary = buildDictionary(t, corpus)
 	fTest = open(sys.argv[4], 'r')
 	output = open(sys.argv[5], 'w+')
 	for line in fTest:
-		eLine = baselineTranslate(t, line)
+		eLine = baselineTranslate(t, dictionary, line)
 		if eLine.endswith('\n'):
 			output.write(eLine)
 		else:
