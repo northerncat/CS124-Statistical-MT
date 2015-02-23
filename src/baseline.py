@@ -27,7 +27,7 @@ def buildDictionary(t, corpus):
 			if t[eWord][fWord] > maxProb:
 				bestWord = eWord
 				maxProb = t[eWord][fWord]
-		dictionary[fWord] = eWord
+		dictionary[fWord] = bestWord
 	return dictionary
 
 def translateWord(t, token):
