@@ -195,3 +195,12 @@ def train(corpus, nIt):
 		print
 	writeT(t, fWords)
 	return t
+
+def main():
+	corpus = readCorpus(sys.argv[1], sys.argv[2])
+	nIt = int(float(sys.argv[3]))
+	t = train(corpus, nIt)
+
+
+if __name__ == "__main__":
+	main()
