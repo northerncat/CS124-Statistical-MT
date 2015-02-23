@@ -89,35 +89,23 @@ def printT(t, fWords):
 		if maxProb > Decimal(1) / Decimal(len(fWords)):
 			print fWord + "<-" + bestWord + ": " + str(maxProb)
 
-def writeT(t, fWords):
-	outputT = open("../output/t", "w+")
-	for fWord in fWords:
-		bestWord = ""
-		maxProb = Decimal(-1)
-		for eWord in t:
-			if t[eWord][fWord] > maxProb:
-				bestWord = eWord
-				maxProb = t[eWord][fWord]
-		if maxProb > Decimal(1) / Decimal(len(fWords)):
-			outputT.write(fWord + " " + bestWord + " " + str(maxProb) + "\n")
+def writeWholeT(t):
+	output = open("../output/wholeT", "w")
+	for eWord in t:
+		for fWord in t[eWord]:
+			print fWord + " " + eWord + " " + str(t[eWord][fWord])
+			output.write(fWord + " " + eWord + " " + str(t[eWord][fWord]) + "\n")
 
-def readT(filename, corpus):
-	fWords = set()
-	eWords = set()
-	for (eLine, fLine) in corpus:
-		for eWord in eLine:
-			eWords.add(eWord)
-		for fWord in fLine:
-			fWords.add(fWord)
+def readWholeT(filename):
 	tFile = open(filename)
 	t = {}
-	for eWord in eWords:
-		t[eWord] = defaultdict(lambda: Decimal(1) / Decimal(len(fWords)))
 	for line in tFile:
 		tokens = line.split(" ")
 		fWord = tokens[0]
 		eWord = tokens[1]
 		prob = Decimal(float(tokens[2]))
+		if eWord not in t:
+			t[eWord] = defaultdict(Decimal)
 		t[eWord][fWord] = prob
 	return t
 
@@ -193,7 +181,7 @@ def train(corpus, nIt):
 			runningT[eWord] = defaultdict(Decimal)
 
 		print
-	writeT(t, fWords)
+	writeWholeT(t)
 	return t
 
 def main():

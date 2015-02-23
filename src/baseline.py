@@ -62,7 +62,7 @@ def baselineTranslate(t, dictionary, fText):
 			if token.lower() in dictionary:
 				eToken = dictionary[token.lower()]
 			else:
-				eToken = translateWord(t, token.lower())
+				eToken = "NULL"
 			# if the fWord points to NULL, jump to next word
 			if eToken == "NULL":
 				continue
@@ -77,7 +77,7 @@ def main():
 	corpus = IBMModel1.readCorpus(sys.argv[1], sys.argv[2])
 	nIt = int(float(sys.argv[3]))
 	if len(sys.argv) > 6:
-		t = IBMModel1.readT(sys.argv[6], corpus)
+		t = IBMModel1.readWholeT(sys.argv[6])
 	else:
 		t = IBMModel1.train(corpus, nIt)
 	dictionary = buildDictionary(t, corpus)
