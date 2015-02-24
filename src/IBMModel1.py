@@ -21,6 +21,10 @@ from collections import defaultdict
 decimal.getcontext().prec = 4
 decimal.getcontext().rounding = decimal.ROUND_HALF_UP
 
+default_t_value = Decimal(0)
+def getT(t, e, f):
+	return t[e][f] if f in t[e] else default_t_value
+
 def toRemove(string):
 	""" This function checks if the given string is a number (floating point or integer)! """
 	punct = [",", ".", "/", "?", "|", "\\", "%", "$", "^", "&", "*", "(", ")", "-", ";", "&quot;", "&apos;s", "&#93;", "...", "&apos;t", ".\n", "&quot;\n"]
@@ -83,18 +87,19 @@ def printT(t, fWords):
 		bestWord = ""
 		maxProb = Decimal(-1)
 		for eWord in t:
-			if t[eWord][fWord] > maxProb:
+			if getT(t, eWord, fWord) > maxProb:
 				bestWord = eWord
-				maxProb = t[eWord][fWord]
+				maxProb = getT(t, eWord, fWord)
 		if maxProb > Decimal(1) / Decimal(len(fWords)):
 			print fWord + "<-" + bestWord + ": " + str(maxProb)
 
 def writeWholeT(t):
-	output = open("../output/wholeT", "w")
+	output = open("../output/wholeT", "w+")
 	for eWord in t:
 		for fWord in t[eWord]:
 			print fWord + " " + eWord + " " + str(t[eWord][fWord])
 			output.write(fWord + " " + eWord + " " + str(t[eWord][fWord]) + "\n")
+	output.close()
 
 def readWholeT(filename):
 	tFile = open(filename)
@@ -107,6 +112,7 @@ def readWholeT(filename):
 		if eWord not in t:
 			t[eWord] = defaultdict(Decimal)
 		t[eWord][fWord] = prob
+	tFile.close()
 	return t
 
 def train(corpus, nIt):
@@ -130,10 +136,11 @@ def train(corpus, nIt):
 	# initialize all probabilities p(f | e) to be the same as 1/len(fWords)
 	runningT = {}
 	t = {}
+	default_t_value = Decimal(1) / Decimal(len(fWords)) 
 	for eWord in eWords:
 		runningT[eWord] = defaultdict(Decimal)
-		t[eWord] = defaultdict(lambda: Decimal(1) / Decimal(len(fWords)))
-
+		t[eWord] = defaultdict(lambda: default_t_value)
+		
 	# Loop component: performs E and M steps in each iteration, until iteration times out
 	for it in range(nIt):
 		print "ITERATION " + str(it)
@@ -150,7 +157,7 @@ def train(corpus, nIt):
 			for j in range(m):
 				sum = Decimal(0)
 				for i in range(l):
-					sum += Decimal(t[eLine[i]][fLine[j]])
+					sum += Decimal(getT(t, eLine[i], fLine[j]))
 				if sum > Decimal(0.000000000000001):
 					probProduct *= sum
 				elif nZero > 0:
@@ -163,7 +170,7 @@ def train(corpus, nIt):
 					fj = fLine[j]
 					ei = eLine[i]
 					# probability of p(f_j | e_i) provided by all alignments in this sentence pair
-					runningT[ei][fj] += normConst* t[ei][fj] * probProduct
+					runningT[ei][fj] += normConst* getT(t, ei, fj) * probProduct 
 					if sumProbs[j] > Decimal(0.000000000000001):
 						runningT[ei][fj] /= sumProbs[j]
 		# M step: since we have already accrued the probabilities from different alignments
