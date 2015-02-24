@@ -1,4 +1,4 @@
-# IBMModel1.py
+# Baseline_EM.py
 # CS124, Winter 2015, PA6: Machine Translation
 # 
 # Group members:
@@ -9,36 +9,30 @@
 # This scripts performs the translation using only the probabilities obtained
 # from IBM Model 1.
 
-
 import IBMModel1
 import sys
-from decimal import Decimal
+#from decimal import Decimal
+
+def getT(t, e, f):
+	return IBMModel1.getT(t, e, f)
 
 def buildDictionary(t, corpus):
 	fWords = set()
 	for (eLine, fLine) in corpus:
-		for fWord in fLine:
-			fWords.add(fWord)
+		fWords |= set(fLine)
 	dictionary = {}
-	for fWord in fWords:
-		bestWord = ""
-		maxProb = Decimal(-1)
-		for eWord in t:
-			if t[eWord][fWord] > maxProb:
-				bestWord = eWord
-				maxProb = t[eWord][fWord]
-		dictionary[fWord] = bestWord
+	for f in fWords:
+		dictionary[f] = translateWord(t, f)
 	return dictionary
 
 def translateWord(t, token):
 	""" This function searches the translation probability dictionary to find an
 		e word that maximizes p(token | eWord). """
-	bestWord = ""
-	maxProb = Decimal(-1)
-	for eWord in t:
-		if t[eWord][token] > maxProb:
-			bestWord = eWord
-			maxProb = t[eWord][token]
+	bestWord, maxProb = 'NULL', float(-1)
+	for e in t:
+		tef = getT(t, e, token)
+		if tef > maxProb:
+			bestWord, maxProb = e, tef
 	return bestWord
 
 def baselineTranslate(t, dictionary, fText):
@@ -54,15 +48,15 @@ def baselineTranslate(t, dictionary, fText):
 			eText: a string translated to the target language (e) """
 	eText = []
 	fText = fText.split(" ")
-	for i in range(len(fText)):
-		token = fText[i]
-		if IBMModel1.toRemove(token.lower()):
+	for i, token in enumerate(fText):
+		ltoken = token.lower()
+		if IBMModel1.toRemove(ltoken):
 			eText.append(token)
 		else:
-			if token.lower() in dictionary:
-				eToken = dictionary[token.lower()]
+			if ltoken in dictionary:
+				eToken = dictionary[ltoken]
 			else:
-				eToken = "NULL"
+				eToken = translateWord(t, ltoken)
 			# if the fWord points to NULL, jump to next word
 			if eToken == "NULL":
 				continue
@@ -72,23 +66,25 @@ def baselineTranslate(t, dictionary, fText):
 
 def main():
 	if len(sys.argv) < 6:
-		print "Invoke the program with: python baseline.py eTrain fTrain nIteration fTest outputDir"
+		print "Invoke the program with: python baseline.py eTrain fTrain nIteration fTest output [tfile]"
 		sys.exit()
+	print 'Reading corpus...'
 	corpus = IBMModel1.readCorpus(sys.argv[1], sys.argv[2])
 	nIt = int(float(sys.argv[3]))
 	if len(sys.argv) > 6:
+		print 'Reading t matrix...'
 		t = IBMModel1.readWholeT(sys.argv[6])
 	else:
-		t = IBMModel1.train(corpus, nIt)
+		print 'Training IBM Model 1...'
+		t = IBMModel1.train(corpus, nIt, reverse = True) # reverse has higher accuracy
+	print 'Creating dictionary...'
 	dictionary = buildDictionary(t, corpus)
 	fTest = open(sys.argv[4], 'r')
 	output = open(sys.argv[5], 'w+')
+	print 'Translating...'
 	for line in fTest:
 		eLine = baselineTranslate(t, dictionary, line)
-		if eLine.endswith('\n'):
-			output.write(eLine)
-		else:
-			output.write(eLine + '\n')
+		output.write(eLine if eLine.endswith('\n') else eLine + '\n')
 	fTest.close()
 	output.close()
 

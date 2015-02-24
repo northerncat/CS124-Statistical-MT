@@ -10,7 +10,11 @@
 
 import IBMModel1
 import sys, math, collections, json, re
-from decimal import Decimal
+#from decimal import Decimal
+from collections import defaultdict
+
+def getT(t, e, f):
+	return IBMModel1.getT(t, e, f)
 
 class LMTranslator:
 	def __init__(self, t, corpus, build = True):
@@ -42,9 +46,10 @@ class LMTranslator:
 				if ltoken in self.dict1:
 					eToken1, eToken2 = self.dict1[ltoken], self.dict2[ltoken]
 				else:
-					continue # eToken1, eToken2 = self.translateWord(ltoken)
+					eToken1, eToken2 = self.translateWord(ltoken)
 				# if the fWord points to NULL, jump to next word
-				if eToken1 == 'NULL' or eToken2 == 'NULL': continue
+				if eToken1 == 'NULL' or eToken2 == 'NULL':
+				    continue
 				eText.append([eToken1] if eToken1 == eToken2 else [eToken1, eToken2])
 		permutation, score = self.scorePermutations([], eText)
 		return " ".join(permutation)
@@ -68,27 +73,24 @@ class LMTranslator:
 		fWords = set()
 		for (eLine, fLine) in self.corpus:
 			fWords |= set(fLine) # union: fWords = fWords | set(fLine)
-		IBMModel1.default_t_value = Decimal(1) / Decimal(len(fWords))
 		self.dict1, self.dict2 = {}, {}
-		ekeys = self.t.keys()
 		for f in fWords:
-			self.dict1[f], self.dict2[f] = self.translateWord(ekeys, f)
+			self.dict1[f], self.dict2[f] = self.translateWord(f)
 		#outputObject(outfile1, self.dict1)
 		#outputObject(outfile2, self.dict2)
 
-	def translateWord(self, ekeys, f):
+	def translateWord(self, f):
 		""" This function searches the translation probability dictionary to find an
 			e word that maximizes p(token | eWord). """
 		bestWord1, bestWord2 = 'NULL', 'NULL'
 		bestProb1, bestProb2 = float(-1), float(-1)
-		for e in ekeys:
-			if f in self.t[e]:
-				val = float(self.t[e][f])
-				if val > bestProb1:
-					bestProb1, bestWord1 = val, e
-				val *= self.eLM.scoreUnigram(e)
-				if val > bestProb2:
-					bestProb2, bestWord2 = val, e
+		for e in self.t:
+			tef = getT(self.t, e, f)
+			if tef > bestProb1:
+				bestProb1, bestWord1 = tef, e
+			tef *= self.eLM.scoreUnigram(e)
+			if tef > bestProb2:
+				bestProb2, bestWord2 = tef, e
 		if bestWord1 == 'NULL':
 			self.fWordsNotFound.append(f)
 		return bestWord1, bestWord2
@@ -98,9 +100,9 @@ class TrigramLanguageModel:
 	def __init__(self, type):
 		"""Initialize the data structures in the constructor."""
 		self.type = type
-		self.trigramCounts = collections.defaultdict(lambda: 0)
-		self.bigramCounts = collections.defaultdict(lambda: 0)
-		self.unigramCounts = collections.defaultdict(lambda: 1)
+		self.trigramCounts = defaultdict(lambda: 0)
+		self.bigramCounts = defaultdict(lambda: 0)
+		self.unigramCounts = defaultdict(lambda: 1)
 		self.unigramTotal = 0
 		self.logdiscount = math.log(0.4)
 
@@ -157,21 +159,6 @@ def inputObject(infile): # causing all strings to become unicode
 	file.close()
 	return dict_list
 
-
-def main_legacy():
-	#eFile, fFile = '../data/train/europarl-v7.es-en.en', '../data/train/europarl-v7.es-en.es'
-	eFile, fFile = '../data/dev/newstest2012.en', '../data/dev/newstest2012.es'
-	corpus = IBMModel1.readCorpus(eFile, fFile)
-	t = IBMModel1.readWholeT('../output/devT')
-	LMT = LMTranslator(t, corpus, build = True)
-	fTest = open('ftest', 'r')
-	output = open('../output/ftest.en', 'w+')
-	for line in fTest:
-		eLine = LMT.translate(line)
-		output.write(eLine if eLine.endswith('\n') else eLine + '\n')
-	fTest.close()
-	output.close()
-	return
 
 def main():
 	if len(sys.argv) < 6:

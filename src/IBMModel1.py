@@ -9,10 +9,17 @@
 # This module implements the Expectation-Maximization algorithm of IBM Model 1
 # that computes the probability of translating certain foreign words from english
 # words.
+#
+# Acknowledgment:
+# The train() function that builds the IBM Model 1 translation probability matrix
+# uses the algorithm published in the Statistical Machine Translation (SMT) site:
+# http://www.statmt.org/book/slides/04-word-based-models.pdf
+# However, our train() function computes t(f|e) rather than t(e|f) that
+# the algorithm in the SMT site computes.
 
 import sys
 import decimal
-from decimal import Decimal
+#from decimal import Decimal
 import collections
 from copy import deepcopy
 from math import pow
@@ -21,9 +28,8 @@ from collections import defaultdict
 decimal.getcontext().prec = 4
 decimal.getcontext().rounding = decimal.ROUND_HALF_UP
 
-default_t_value = Decimal(0)
 def getT(t, e, f):
-	return t[e][f] if f in t[e] else default_t_value
+	return t[e][f] if f in t[e] else float(0)
 
 def toRemove(string):
 	""" This function checks if the given string is a number (floating point or integer)! """
@@ -39,7 +45,7 @@ def removePunct(line, ef):
 	punct = [",", ".", "/", "?", "|", "\\", "%", "$", "^", "&", "*", "(", ")", "-", ";", "&quot;", "&apos;s", "&#93;", "...", "&apos;t", ".\n", "&quot;\n", ":", "!", "\xc2"]
 	stopWords = ["el", "a", "la", "los", "las", "de", "en", "un", "una", "y", "con", "del", "que", "por", "se"]
 	tokens = []
-	for i in range(len(line)):
+	for i in xrange(len(line)):
 		token = line[i].strip()
 		if token == "":
 			continue
@@ -83,22 +89,21 @@ def readCorpus(eFile, fFile):
 	return toReturn
 
 def printT(t, fWords):
-	for fWord in fWords:
-		bestWord = ""
-		maxProb = Decimal(-1)
-		for eWord in t:
-			if getT(t, eWord, fWord) > maxProb:
-				bestWord = eWord
-				maxProb = getT(t, eWord, fWord)
-		if maxProb > Decimal(1) / Decimal(len(fWords)):
-			print fWord + "<-" + bestWord + ": " + str(maxProb)
+	for f in fWords:
+		bestWord, maxProb = "", float(-1)
+		for e in t:
+			if getT(t, e, f) > maxProb:
+				bestWord = e
+				maxProb = getT(t, e, f)
+		if maxProb > float(1) / float(len(fWords)):
+			print f + "<-" + bestWord + ": " + str(maxProb)
 
 def writeWholeT(t):
 	output = open("../output/wholeT", "w+")
-	for eWord in t:
-		for fWord in t[eWord]:
-			print fWord + " " + eWord + " " + str(t[eWord][fWord])
-			output.write(fWord + " " + eWord + " " + str(t[eWord][fWord]) + "\n")
+	for e in t:
+		for f in t[e]:
+			#print f + " " + e + " " + str(t[e][f])
+			output.write(f + " " + e + " " + str(getT(t, e, f)) + "\n")
 	output.close()
 
 def readWholeT(filename):
@@ -106,88 +111,94 @@ def readWholeT(filename):
 	t = {}
 	for line in tFile:
 		tokens = line.split(" ")
-		fWord = tokens[0]
-		eWord = tokens[1]
-		prob = Decimal(float(tokens[2]))
-		if eWord not in t:
-			t[eWord] = defaultdict(Decimal)
-		t[eWord][fWord] = prob
+		f, e = tokens[0], tokens[1]
+		prob = float(tokens[2])
+		if e not in t:
+			t[e] = defaultdict(lambda: float(0))
+		t[e][f] = prob
 	tFile.close()
 	return t
 
-def train(corpus, nIt):
+
+def train(corpus, nIt, reverse = False):
 	""" This function performs the EM algorithm on the given corpus! For the E step, 
 		since it is unnecesary to store all of the alignments in memory (also inefficient),
 		we generate alignments for every sentence pair on the fly and add normalized probabilities
 		to corresponding word pairs after examining each alignment. For the M step, we
 		just normalize the probabilities for each foreign word """
+	# reverse the ordering of e and f
+	if reverse:
+		corpus2 = [(fLine, eLine) for (eLine, fLine) in corpus]
+		corpus = corpus2
+
 	# Initialization: first, find the vocab of each language
-	fWords = set()
-	eWords = set()
+	eWords, fWords = set(), set()
 	print "Putting into corpus..."
 	for (eLine, fLine) in corpus:
-		for eWord in eLine:
-			eWords.add(eWord)
-		for fWord in fLine:
-			fWords.add(fWord)
+		eWords |= set(eLine)
+		fWords |= set(fLine)
+
 	# t is the eventual translation probability matrix to be returned, while runningT is
 	# used in the loop to calculate new probabilities
-	print "Initializing translation probs..."
+
 	# initialize all probabilities p(f | e) to be the same as 1/len(fWords)
-	runningT = {}
+	print "Initializing translation probs..."
 	t = {}
-	default_t_value = Decimal(1) / Decimal(len(fWords)) 
-	for eWord in eWords:
-		runningT[eWord] = defaultdict(Decimal)
-		t[eWord] = defaultdict(lambda: default_t_value)
+	default_t_value = float(1) / float(len(fWords)) 
+	for e in eWords:
+		t[e] = defaultdict(lambda: default_t_value)
 		
 	# Loop component: performs E and M steps in each iteration, until iteration times out
-	for it in range(nIt):
+	for it in xrange(nIt):
 		print "ITERATION " + str(it)
-		# E step: goes through each sentence pair, and examine the alignments
-		for (eLine, fLine) in corpus:
-			m = len(fLine)
-			l = len(eLine)
-			normConst = Decimal(1) / Decimal(pow((l+1), m))
-			# Use the equation that 
-			# p(fj, A | ei) = \frac{1}{(l+1)^m} * t(fj | ei) * \prod_{j' \neq j}^m\sum_{i'=1}^l * t(f_j' | e_i')
-			probProduct = Decimal(1)
-			sumProbs = []
-			nZero = 0
-			for j in range(m):
-				sum = Decimal(0)
-				for i in range(l):
-					sum += Decimal(getT(t, eLine[i], fLine[j]))
-				if sum > Decimal(0.000000000000001):
-					probProduct *= sum
-				elif nZero > 0:
-					probProduct = 0
-				else:
-					nZero += 1
-				sumProbs.append(sum)
-			for i in range(l):
-				for j in range(m):
-					fj = fLine[j]
-					ei = eLine[i]
-					# probability of p(f_j | e_i) provided by all alignments in this sentence pair
-					runningT[ei][fj] += normConst* getT(t, ei, fj) * probProduct 
-					if sumProbs[j] > Decimal(0.000000000000001):
-						runningT[ei][fj] /= sumProbs[j]
-		# M step: since we have already accrued the probabilities from different alignments
-		# in the E step, we only need to normalize the total probability of one eWord to be 1 here
-		for eWord in runningT:
-			wordSum = Decimal(0)
-			for fWord in runningT[eWord]:
-				wordSum += runningT[eWord][fWord]
-			if wordSum == Decimal(0):
-				continue
-			for fWord in runningT[eWord]:
-				runningT[eWord][fWord] /= wordSum
-		t = deepcopy(runningT)
-		for eWord in runningT:
-			runningT[eWord] = defaultdict(Decimal)
 
-		print
+		# E step
+
+		# initialization
+		runningT = {}
+		for e in eWords:
+			runningT[e] = defaultdict(lambda: float(0))
+		sum = defaultdict(lambda: float(0))
+
+		# goes through each sentence pair, and examine the alignments
+		for (eLine, fLine) in corpus:
+			fm, el = len(fLine), len(eLine)
+			sumProbs = [float(0) for j in xrange(fm)]
+
+			for i, e in enumerate(eLine):
+				for j, f in enumerate(fLine):
+					tef = t[e][f] if f in t[e] else default_t_value
+					sumProbs[j] += tef
+
+			for i, e in enumerate(eLine):
+				for j, f in enumerate(fLine):
+					tef = t[e][f] if f in t[e] else default_t_value
+					runningT[e][f] += tef / sumProbs[j]
+					sum[e] += tef / sumProbs[j]
+
+		# M step
+		
+		# since we have already accrued the probabilities from different alignments
+		# in the E step, we only need to normalize the total probability of one eWord to be 1 here
+		for e in runningT:
+			for f in runningT[e]:
+				t[e][f] = runningT[e][f] / sum[e]
+
+		# end of iteration
+
+	# reverse the ordering of e and f
+	if reverse:
+		# t[e][f] -> t2[f][e]
+		default_t_value = float(1) / float(len(eWords))
+		t2 = {}
+		for f in fWords:
+			t2[f] = defaultdict(lambda: default_t_value)
+		for e in t:
+			for f in t[e]:
+				t2[f][e] = t[e][f]
+		t = t2
+
+	# output the t matrix
 	writeWholeT(t)
 	return t
 
