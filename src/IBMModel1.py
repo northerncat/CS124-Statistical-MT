@@ -33,6 +33,8 @@ def getT(t, e, f):
 
 def toRemove(string):
 	""" This function checks if the given string is a number (floating point or integer)! """
+	if string[0].isupper() and string[1:].islower():
+		return True
 	punct = [",", ".", "/", "?", "|", "\\", "%", "$", "^", "&", "*", "(", ")", "-", ";", "&quot;", "&apos;s", "&#93;", "...", "&apos;t", ".\n", "&quot;\n"]
 	for char in string:
 		if char.isdigit() or char in punct:
