@@ -28,8 +28,8 @@ from collections import defaultdict
 decimal.getcontext().prec = 4
 decimal.getcontext().rounding = decimal.ROUND_HALF_UP
 
-def getT(t, e, f):
-	return t[e][f] if f in t[e] else float(0)
+def getT(t, i, j):
+	return t[i][j] if j in t[i] else float(0)
 
 def toRemove(string):
 	""" This function checks if the given string is a number (floating point or integer)! """
@@ -98,8 +98,8 @@ def printT(t, fWords):
 		if maxProb > float(1) / float(len(fWords)):
 			print f + "<-" + bestWord + ": " + str(maxProb)
 
-def writeWholeT(t):
-	output = open("../output/wholeT", "w+")
+def writeWholeT(t, alt = False):
+	output = open("../output/wholeT.test" if not alt else "../output/wholeT2.test", "w+") ###############################
 	for e in t:
 		for f in t[e]:
 			#print f + " " + e + " " + str(t[e][f])
@@ -120,14 +120,14 @@ def readWholeT(filename):
 	return t
 
 
-def train(corpus, nIt, reverse = False):
+def train(corpus, nIt, reverseCorpus = False, reverseT = False, alt = False):
 	""" This function performs the EM algorithm on the given corpus! For the E step, 
 		since it is unnecesary to store all of the alignments in memory (also inefficient),
 		we generate alignments for every sentence pair on the fly and add normalized probabilities
 		to corresponding word pairs after examining each alignment. For the M step, we
 		just normalize the probabilities for each foreign word """
 	# reverse the ordering of e and f
-	if reverse:
+	if reverseCorpus:
 		corpus2 = [(fLine, eLine) for (eLine, fLine) in corpus]
 		corpus = corpus2
 
@@ -187,7 +187,7 @@ def train(corpus, nIt, reverse = False):
 		# end of iteration
 
 	# reverse the ordering of e and f
-	if reverse:
+	if reverseT:
 		# t[e][f] -> t2[f][e]
 		default_t_value = float(1) / float(len(eWords))
 		t2 = {}
@@ -199,8 +199,9 @@ def train(corpus, nIt, reverse = False):
 		t = t2
 
 	# output the t matrix
-	writeWholeT(t)
+	writeWholeT(t, alt)
 	return t
+
 
 def main():
 	corpus = readCorpus(sys.argv[1], sys.argv[2])

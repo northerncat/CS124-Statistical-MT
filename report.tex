@@ -1,0 +1,152 @@
+\documentclass[12pt, oneside]{revtex4}   	% use "amsart" instead of "article" for AMSLaTeX format
+%\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+%\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or epsÂ§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{subcaption}
+\captionsetup{compatibility=false}
+%\usepackage{multicol}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{setspace}
+\usepackage[ampersand]{easylist}
+\ListProperties(Hide=100,Hang=true,Progressive=3ex, Style*=$\bullet$)
+\begin{document}
+\title{A Statistical Machine Translation System for Spanish-to-English Translation}
+\author{Albert Chu, Brad Huang, and Nicholas P. Moores, Stanford University\\Dan Jurafsky (for CS 124)}
+\date{27 February 2015}							% Activate to display a given date or no date
+\maketitle
+%\section{}
+%\subsection{}
+%\begin{multicols}{2}
+\section{Comments on {\it F}, Spanish}
+To enumerate the ways we were able to capitalize on or were challenged by building this machine translation system, it is necessary to first discuss the relevant differences between English and Spanish. Key differences are that: 
+\begin{enumerate}
+\item Spanish is a much more heavily inflected language than English, with different verb conjugations for {\it -ir} and {\it -er} and {\it -ar} final verbs and different conjugations for mood and tense. English only inflects verbs for number in the third-person present tense, and has largely abandoned marking verbs for number in the past tense.
+\begin{easylist}
+& Spanish: {\it el hombre corre} and {\it yo corro} and {\it los estudiantes corren}
+& English: {\it the man runs} and {\it I run} and {\it the students run}
+\end{easylist}
+\item Within noun phrases, Spanish adjectives tend to appear following the nouns they modify instead of before them as in English (though adjective placement in Spanish can be a cue to meaning)
+\begin{easylist}
+& Spanish: {\it un pobre hombre} and {\it un hombre pobre}
+& English: {\it a poor (unfortunate) man} and {\it a poor (destitute) man}
+\end{easylist}
+\item Spanish word ordering is much more flexible than is English's. Whereas English rarely deviates from SVO (Subject-Verb-Object) word ordering, Spanish speakers do so whenever they desire to place particular emphasis on a word (and will then place that word toward the end of the sentence).
+\begin{easylist}
+& Spanish: {\it Masoud trabaja en el mercado.} and {\it Trabaja Masoud en el mercado.} and {\it En el mercado trabaja Masoud.}
+& English: {\it Masoud works in the market.}
+\end{easylist}
+\item Spanish uses grammatical gender, whereas English abandoned such a system hundreds of years ago.
+\begin{easylist}
+& Spanish: {\it la abuela hermosa} and {\it el abuelo hermoso} and {\it los estudiantes hermosos}
+& English: {\it the beautiful grandmother} and {\it the beautiful grandfather} and {\it the beautiful students}
+\end{easylist}
+\item Spanish heavily relies on the use of the subjunctive mood when describing the past, whereas the use of the subjunctive mood in English hash become less commonplace.
+\begin{easylist}
+& Spanish: {\it Cuando eras estudiante, tu no trabajabas mucho} and {\it Cuando eras estudiante, no trabajaste mucho}
+& English: {\it When you were a student (for a long time), you didn't work much (habitually)} and {\it When you were a student (for a long time), you didn't work much (for a set time)}
+\end{easylist}
+\item Spanish nouns and adjectives must also agree by both gender and number, as must the particles used at the beginning of noun phrases (for example, the definite articles {\it el}, {\it la}, {\it los}, and {\it las}).
+\begin{easylist}
+& Spanish: {\it una abuela} and {\it una computadora}
+& English: {\it a question} and {\it an answer}
+\end{easylist}
+\item English indefinite articles are marked for whether their noun begins (phonetically) with a vowel, whereas Spanish does not.
+\begin{easylist}
+& Spanish: {\it una abuela} and {\it una computadora}
+& English: {\it a question} and {\it an answer}
+\end{easylist}
+\item Spanish will often use a (non-progressive) present tense form to indicate that something is currently happening, whereas English will use primarily the progressive present tense form to indicate this; a non-progressive translation would seem wrong to a native English speaker.
+\begin{easylist}
+& Spanish: {\it Ellos comen} but {\it Ellos son comiendo.*}
+& English: {\it They eat*} and {\it They are eating}
+\end{easylist}
+\end{enumerate}
+Many of the difficulties which arise from translating Spanish into English rest on the morphosyntactic differences between the two languages. The lack of grammatical gender in English poses the problem that many of the words in a Spanish sentence that have to agree based on the gender of the noun at the head of the noun phrase must instead map to the same English articles and adjectives (but that the same does not hold for number). It is therefore a challenge to train a system to recognize that {\it traducido} and {\it traducida} map to the same English word, {\it translated}. Fortunately, since it is Spanish that is more inflected, it is easier to translate from Spanish to English since one can generalize across or collapse inflections, whereas an English-to-Spanish translation would require the system to correctly output sentences whose words are felicitously matched for Spanish gender, number, tense, and mood.
+
+
+\section{IBM Improvement Strategies}
+In the course of this project we applied two separate strategies to improve our statistical machine translation system.
+\begin{enumerate}
+\item We first improved the baseline IBM algorithm by implementing a  trigram language model. This was done mostly to improve performance surrounding errors caused by differences in word order between Spanish and English. For a given trigram, we permute the trigram and select the trigram with the highest probability. We implemented this language model in the included script \texttt{LanguageModel.py}.
+\item We then 
+\end{enumerate}
+
+\section{Error Analysis}
+Infrequent words become 'fawn'. Infrequent inflected forms are also translated as 'fawn'; if we stemmed we'd have to try to unstem the morphology back.
+
+Could use a gazeteer to help with proper nouns.
+
+Baseline is to weight all alignments are equal, though this way you can easily calculate the probability for 'the' and 'la'. One way to improve that is to limit the alignment to maybe a few words before and after, so voy could align to +- 1 precition (only align to I and go and to) in the mapping "yo voy a la tienda" to "I go to the store".
+
+Use stop word filtering but then we have to deal with the fact that the stop word in one doesn't always map to a word in the other language's sentence. 
+
+Use POS tag on the document, and align words of the same POS tag (ex: only aligning noun to noun).
+
+Mentioned inflection because one of the biggest errors was that since there are so many inflected forms, some of them are not identified as the same word as the others. one way to do that is stemming, but then you'd have to deal with putting the right stem back.
+
+1. Length: Spanish sentences are in general longer than that of English, so it is beneficial to reduce the length of the sentence when translating. Possible method of reducing includes restricting the length of the target sentence and eliminating words in the source sentence based on rankings like the Moldovan et al. criteria.
+2. Alignment: All of the possible alignments of a given sentence pairs are treated equally. This means that the probability of aligning repeating words to words in another language is abnormally high. As a result, the translations from the baseline contains unrelated spurious words that occurs only because they are repeated several times in many sentences of the corpus. For example, when we train on the first 300 sentences of the dev set, the output translation contains a lot of 'Military'... Several ways to improve this: (1) make sure that a word does not align to words far from its corresponding index in the other sentence, (2) use stop word filter to filter out abundant words like 'el', 'la' ... and 'the', 'a', ... and assign hard rules to translate these stop words, (3) use a part-of-speech tagger to tag the training documents, and only consider alignments that align words of the same POS. Methods (1) and (3) are difficult because it increases the runtime a lot (we have to actually look into each alignment), while method (2) would create some issues because there may not be 1-some correspondences between all Spanish and English stop words.
+3. Word Order: Spanish and English have in general the same word orders. However, because we consider all alignments equal, the English word with maximum p(F|E) is not always the actual corresponding word, but the word that appears quite frequently next to the actual word. This can be improved by (1) phrase translation: we could translate in phrases rather than words to avoid possible examples like 'San Francisco' being translated as 'Francisco San', and (2) language model: we could evaluate the English words with high p(F|E) and select the combinations based on a language model p(E).
+\section{Comparative Analysis with Google Translate}
+\begin{enumerate}
+\item
+\begin{easylist}
+& Spanish: Es bastante posible que no , pero puede ser que finalmente Occidente pueda presumir de proteger los derechos humanos .
+& Output: is quite possible that not , but can be that finally west can fawn of protect the rights human .
+& Google: It is quite possible that no, but it may be that the West can finally boast of protecting human rights.
+\end{easylist}
+\begin{easylist}
+\item
+& Spanish: Ya era la segunda edición del programa de \&quot; La obesidad de no es una casualidad \&quot; , que apoya la Compañía de Seguro Sanitario General y la empresa Unilever .
+& Output: already was the second edition the programme of \&quot; the obesity of not is a fawn \&quot; , that supports the company of sure health general and the company fawn .
+& Google: It was the second edition of the program \& quot; Obesity is not a coincidence \& quot; Which supports the General Health Insurance Company and Unilever.
+\end{easylist}
+\begin{easylist}
+\item
+& Spanish: De juegos de este tipo no cabe esperar que recree deformaciones y colisiones complicadas , pero de hecho antes de un golpe contra cualquier objeto , no podéis predecir cómo reaccionará vuestro auto , con lo cual no todo está en orden .
+& Output: of games of this kind not is wait that fawn fawn and collisions complicated , but of fact before of a coup against any subject , not tell predict how fawn fawn prosecution , with what which not all is in order .
+& Google: Games of this type are not expected to recreate complicated deformations and collisions, but in fact before a coup against any object, you can not predict how your car will react, which not everything is in order.
+\end{easylist}
+\begin{easylist}
+\item
+& Spanish: Tenéis que estar atentos a los surtidores de gasolina al lado de la carretera , porque justamente ahí tenéis que cambiar de auto , aunque en la gran mayoría de los casos os bastará lo que tenéis .
+& Output: you that be to to the fawn of petrol the on of the road , because exactly there you that change of prosecution , although in the great majority of the cases you suffice what that you .
+& Google: You must be attentive to the pumps off the road because right there you have to change cars, although in most cases will suffice what you have.
+\end{easylist}
+\begin{easylist}
+\item
+& Spanish: La campaña del defensor del consumidor se dirige en concreto a Josef Ackermann , director del Deutsche Bank , aunque los grandes bancos como Goldman Sachs o Morgan Stanley actúan de manera parecida .
+& Output: the campaign the ombudsman the consumer at in particular to fawn chair , director the deutsche bank , although the large banks as sink sachs or unhesitatingly fawn act of way analogous .
+& Google: The consumer advocate campaign is directed specifically to Josef Ackermann, head of Deutsche Bank, although the big banks like Goldman Sachs or Morgan Stanley act similarly.
+\end{easylist}
+\end{enumerate}
+\section{Comparative Analysis}
+
+\begin{thebibliography}{999}
+\bibitem{Eckhorn} Eckhorn, R., Bauer, R., Jordan, W., Brosch, M., Kruse, W., Munk, M., \& Reitboeck, H. J. (1988). Coherent oscillations: A mechanism of feature linking in the visual cortex?. {\it Biological cybernetics, 60(2)}, 121-130.
+\bibitem{Gray1} Gray, C. M., \& Singer, W. (1989). Stimulus-specific neuronal oscillations in orientation columns of cat visual cortex. {\it Proceedings of the National Academy of Sciences, 86(5)}, 1698-1702.
+\bibitem{Gray2} Gray, C. M., König, P., Engel, A. K., \& Singer, W. (1989). Oscillatory responses in cat visual cortex exhibit inter-columnar synchronization which reflects global stimulus properties. {\it Nature, 338(6213)}, 334-337.
+\bibitem{Grossberg}Grossberg, S., \& Somers, D. (1991). Synchronized oscillations during cooperative feature linking in a cortical model of visual perception. {\it Neural Networks, 4(4)}, 453-466.
+\bibitem{Kanizsa} Kanizsa, G. (1976). Subjective contours. {\it Scientific American, 234(4)}, 48-52.
+\bibitem{Lee} Lee, T. S. (2001). Dynamics of subjective contour formation in the early visual cortex. {\it Proceedings of the National Academy of Sciences, 98(4)}, 1907-1911.
+\bibitem{Nieder} Nieder, A. (2002). Seeing more than meets the eye: processing of illusory contours in animals. {\it Journal of Comparative Physiology A}, 188(4), 249-260.
+\bibitem{Orban} Orban, G. A., Dupont, P., De Bruyn, B., Vogels, R., Vandenberghe, R., \& Mortelmans, L. (1995). A motion area in human visual cortex. {\it Proceedings of the National Academy of Sciences, 92(4)}, 993-997.
+\bibitem{Samonds} Samonds, J. M., Zhou, Z., Bernard, M. R., \& Bonds, A. B. (2006). Synchronous activity in cat visual cortex encodes collinear and cocircular contours. {\it Journal of Neurophysiology, 95(4)}, 2602-2616.
+\bibitem{Singer} Singer, W., \& Gray, C. M. (1995). Visual feature integration and the temporal correlation hypothesis. {\it Annual review of neuroscience, 18(1)}, 555-586.
+\bibitem{Somers} Somers, D., \& Kopell, N. (1993). Rapid synchronization through fast threshold modulation. {\it Biological cybernetics, 68(5)}, 393-407.
+\bibitem{Traub} Traub, R. D., Whittington, M. A., Stanford, I. M., \& Jefferys, J. G. (1996). A mechanism for generation of long-range synchronous fast oscillations in the cortex. Nature, 383(6601), 621-624.
+\bibitem{vonderHeydt} von der Heydt, R., \& Peterhans, E. (1989). Mechanisms of contour perception in monkey visual cortex. I. Lines of pattern discontinuity. {\it The Journal of neuroscience, 9(5)}, 1731-1748.
+\bibitem{yomama}von der Heydt, R., \& Peterhans, E. (1989). Mechanisms of contour perception in monkey visual cortex. I. Lines of pattern discontinuity. {\it The Journal of neuroscience, 9(5)}, 1731-1748.
+\end{thebibliography}
+%\end{multicols}
+\vfill
+\section{Appendix for Figures}
+Figures are listed below by the experiment they are associated with. See Results and Analysis for other results pertaining to these figures.
+
+\end{document}
