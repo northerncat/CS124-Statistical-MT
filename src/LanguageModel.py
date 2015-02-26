@@ -12,31 +12,31 @@ import IBMModel1
 import sys, math, collections, json, re
 #from decimal import Decimal
 from collections import defaultdict
+import Utility
 
-def getT(t, e, f):
-	return IBMModel1.getT(t, e, f)
+def getT(t, i, j): # t[i][j]
+	return IBMModel1.getT(t, i, j)
 
 class LMTranslator:
-	def __init__(self, t, corpus, build = True):
+	def __init__(self, t, corpus, eLM, build = True):
 		"""Initialize the data structures in the constructor."""
 		self.t = t
 		self.corpus = corpus
-		self.eLM = TrigramLanguageModel('e')
-		self.fLM = TrigramLanguageModel('f')
-		self.eLM.train(corpus)
-		self.fLM.train(corpus)
+		self.eLM = eLM
 		if build:
 			self.fWordsNotFound = []
 			self.buildDictionary()
-			outputObject('../output/foreign_words_not_found.txt', self.fWordsNotFound)
+			Utility.outputObject('../output/foreign_words_not_found.txt', self.fWordsNotFound)
 		else:
 			self.readDictionary()
 
-	def translate(self, fText):
+	def translateSentence(self, fText):
 		""" Pick the best translation based on the probabilities calculated from the EM algorithm
 			and the language model (trigram)."""
 		eText = []
-		for i, token in enumerate(fText.split(' ')):
+		fText = fText.split(' ')
+		prev1, prev2 = '<S>', '<S>'
+		for i, token in enumerate(fText):
 			ltoken = token.lower()
 			if IBMModel1.toRemove(ltoken):
 				if re.findall(r'\d+\,\d+', token): # replace decimal point
@@ -48,15 +48,26 @@ class LMTranslator:
 				else:
 					eToken1, eToken2 = self.translateWord(ltoken)
 				# if the fWord points to NULL, jump to next word
-				if eToken1 == 'NULL' or eToken2 == 'NULL':
+				if eToken1 == 'NULL':
 				    continue
-				eText.append([eToken1] if eToken1 == eToken2 else [eToken1, eToken2])
-		permutation, score = self.scorePermutations([], eText)
+				eText.append([eToken1] if eToken1 == eToken2 or eToken2 == 'NULL' else [eToken1, eToken2])
+				#eText.append([eToken1])
+		eText = self.reduceSentencePossibilities(eText)
+		permutation, _ = self.scorePermutations([], eText)
 		return " ".join(permutation)
+
+	def reduceSentencePossibilities(self, eText):
+		nwords = 1
+		lst = [e[1] for e in eText if len(e) >= 2]
+		lst = [(e, len(e)) for e in lst]
+		lst.sort(key = lambda x: x[1], reverse = True)
+		lst = [e[0] for e in lst[:nwords]]
+		eText = [e if (len(e) == 1 or e[1] in lst) else e[:1] for e in eText]
+		return eText
 
 	def scorePermutations(self, partial, remaining):
 		if not remaining:
-			return partial, self.eLM.score(partial)
+			return partial, self.eLM.scoreSentence(partial)
 		bestPermutation, bestScore = None, float(-1)
 		first, rest = remaining[0], remaining[1:]
 		for word in first:
@@ -66,8 +77,8 @@ class LMTranslator:
 		return bestPermutation, bestScore
 
 	def readDictionary(self, infile1 = '../output/dict1.txt', infile2 = '../output/dict2.txt'):
-		self.dict1 = inputObject(infile1)
-		self.dict2 = inputObject(infile2)
+		self.dict1 = Utility.inputObject(infile1)
+		self.dict2 = Utility.inputObject(infile2)
 
 	def buildDictionary(self, outfile1 = '../output/dict1.txt', outfile2 = '../output/dict2.txt'):
 		fWords = set()
@@ -76,23 +87,18 @@ class LMTranslator:
 		self.dict1, self.dict2 = {}, {}
 		for f in fWords:
 			self.dict1[f], self.dict2[f] = self.translateWord(f)
-		#outputObject(outfile1, self.dict1)
-		#outputObject(outfile2, self.dict2)
 
-	def translateWord(self, f):
+	def translateWord(self, token):
 		""" This function searches the translation probability dictionary to find an
 			e word that maximizes p(token | eWord). """
-		bestWord1, bestWord2 = 'NULL', 'NULL'
-		bestProb1, bestProb2 = float(-1), float(-1)
-		for e in self.t:
-			tef = getT(self.t, e, f)
-			if tef > bestProb1:
-				bestProb1, bestWord1 = tef, e
-			tef *= self.eLM.scoreUnigram(e)
-			if tef > bestProb2:
-				bestProb2, bestWord2 = tef, e
+		bestWord1, maxProb1 = 'NULL', float(-1)
+		bestWord2, maxProb2 = 'NULL', float(-1)
+		lst = [(e, getT(self.t, e, token)) for e in self.t if getT(self.t, e, token) > float(0)]
+		lst.sort(key = lambda x: x[1], reverse = True)
+		bestWord1 = lst[0][0] if len(lst) >= 1 else 'NULL'
+		bestWord2 = lst[1][0] if len(lst) >= 2 else 'NULL'
 		if bestWord1 == 'NULL':
-			self.fWordsNotFound.append(f)
+			self.fWordsNotFound.append(token)
 		return bestWord1, bestWord2
 
 
@@ -121,7 +127,7 @@ class TrigramLanguageModel:
 				self.unigramCounts[word1] += 1
 				self.unigramTotal += 1
 
-	def score(self, sentence):
+	def scoreSentence(self, sentence):
 		""" Takes a list of strings as argument and returns the log-probability of the 
 			sentence using your language model. Use whatever data you computed in train() here. """
 		score = 0.0 
@@ -130,34 +136,29 @@ class TrigramLanguageModel:
 			word1 = tokens[i]
 			word2 = tokens[i - 1]
 			word3 = tokens[i - 2] if i >= 2 else tokens[0]
-			count3 = self.trigramCounts[(word1,word2,word3)]
-			count2 = self.bigramCounts[(word1,word2)]
-			if count3 > 0 and count2 > 0:
-				score += math.log(count3) - math.log(count2)
+			score += self.scoreTrigramLog(word1, word2, word3)
+		return math.exp(score)
+
+	def scoreTrigramLog(self, word1, word2, word3):
+		count3 = self.trigramCounts[(word1,word2,word3)]
+		count2 = self.bigramCounts[(word1,word2)]
+		if count3 > 0 and count2 > 0:
+			score = math.log(count3) - math.log(count2)
+		else:
+			score = self.logdiscount
+			count1 = self.unigramCounts[word1]
+			if count2 > 0 and count1 > 0:
+				score += math.log(count2) - math.log(count1)
 			else:
 				score += self.logdiscount
-				count1 = self.unigramCounts[word1]
-				if count2 > 0 and count1 > 0:
-					score += math.log(count2) - math.log(count1)
-				else:
-					score += self.logdiscount
-					score += math.log(count1) - math.log(self.unigramTotal)
-		return math.exp(score)
+				score += math.log(count1) - math.log(self.unigramTotal)
+		return score
+
+	def scoreTrigram(self, word1, word2, word3):
+		return math.exp(self.scoreTrigramLog(word1, word2, word3))
 
 	def scoreUnigram(self, word):
 		return float(self.unigramCounts[word]) / float(self.unigramTotal)
-
-
-def outputObject(outfile, dict_list): # causing all strings to become unicode
-	file = open(outfile, 'w')
-	json.dump(dict_list, file, ensure_ascii=True, encoding="utf-8")
-	file.close()
-
-def inputObject(infile): # causing all strings to become unicode
-	file = open(infile)
-	dict_list = json.load(file, encoding="utf-8")
-	file.close()
-	return dict_list
 
 
 def main():
@@ -173,14 +174,19 @@ def main():
 		t = IBMModel1.readWholeT(sys.argv[6])
 	else:
 		print 'Training IBM Model 1...'
-		t = IBMModel1.train(corpus, nIt)
+		t = IBMModel1.train(corpus, nIt, reverseCorpus = True, reverseT = True) # reverse has higher accuracy
+
 	print 'Creating language model...'
-	LMT = LMTranslator(t, corpus, build = True)
+	eLM = TrigramLanguageModel('e')
+	eLM.train(corpus)
+
+	LMT = LMTranslator(t, corpus, eLM, build = True)
+
+	print 'Translating...'
 	fTest = open(sys.argv[4], 'r')
 	output = open(sys.argv[5], 'w+')
-	print 'Translating...'
 	for line in fTest:
-		eLine = LMT.translate(line)
+		eLine = LMT.translateSentence(line)
 		output.write(eLine if eLine.endswith('\n') else eLine + '\n')
 	fTest.close()
 	output.close()
