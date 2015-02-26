@@ -1,4 +1,7 @@
-.*
+report.log
+report.synctex.gz
+report.aux
+report.end
 data/.*
 data/dev/.*
 data/test/.*
