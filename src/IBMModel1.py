@@ -22,7 +22,7 @@ import collections
 from collections import defaultdict
 
 names = []
-nameF = open('nombres')
+nameF = open('../data/nombres')
 for line in nameF:
 	tokens = line.split(" ")
 	names.append(tokens[0].lower())
@@ -33,7 +33,7 @@ def getT(t, e, f):
 def toRemove(string):
 	""" This function checks if the given string is a number (floating point or integer)! """
 	if names == []:
-		nameF = open('nombres')
+		nameF = open('../data/nombres')
 		for line in nameF:
 			tokens = line.split(" ")
 			names.append(tokens[0].lower())
