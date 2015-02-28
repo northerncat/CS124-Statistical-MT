@@ -28,8 +28,8 @@ from collections import defaultdict
 decimal.getcontext().prec = 4
 decimal.getcontext().rounding = decimal.ROUND_HALF_UP
 
-def getT(t, i, j):
-	return t[i][j] if j in t[i] else float(0)
+def getT(t, e, f):
+	return t[e][f] if (e in t and f in t[e]) else float(0)
 
 def toRemove(string):
 	""" This function checks if the given string is a number (floating point or integer)! """
@@ -50,10 +50,12 @@ def removePunct(line, ef):
 		if token == "":
 			continue
 		if not toRemove(token):
+			if i == 0 and ef == 'e':
+				token = token.lower()
 			if token[-1] == '\n':
-				tokens.append(token[:-1].lower())
+				tokens.append(token[:-1].lower() if ef == 'f' else token[:-1])
 			else:
-				tokens.append(token.lower())
+				tokens.append(token.lower() if ef == 'f' else token)
 	# give the foreign sentence an option to point to NULL
 	if ef == 'e':
 		tokens.append("NULL")
@@ -99,18 +101,18 @@ def printT(t, fWords):
 			print f + "<-" + bestWord + ": " + str(maxProb)
 
 def writeWholeT(t, alt = False):
-	output = open("../output/wholeT.test" if not alt else "../output/wholeT2.test", "w+") ###############################
+	output = open("../output/wholeT" if not alt else "../output/wholeT2", "w+")
 	for e in t:
 		for f in t[e]:
 			#print f + " " + e + " " + str(t[e][f])
-			output.write(f + " " + e + " " + str(getT(t, e, f)) + "\n")
+			print >>output, f + '\t' + e + '\t' + str(getT(t, e, f))
 	output.close()
 
 def readWholeT(filename):
 	tFile = open(filename)
 	t = {}
 	for line in tFile:
-		tokens = line.split(" ")
+		tokens = line.rstrip('\r\n').split('\t')
 		f, e = tokens[0], tokens[1]
 		prob = float(tokens[2])
 		if e not in t:
@@ -144,7 +146,7 @@ def train(corpus, nIt, reverseCorpus = False, reverseT = False, alt = False):
 	# initialize all probabilities p(f | e) to be the same as 1/len(fWords)
 	print "Initializing translation probs..."
 	t = {}
-	default_t_value = float(1) / float(len(fWords)) 
+	default_t_value = float(1) / float(len(fWords))
 	for e in eWords:
 		t[e] = defaultdict(lambda: default_t_value)
 		
