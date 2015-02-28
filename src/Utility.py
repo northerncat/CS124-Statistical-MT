@@ -1,4 +1,4 @@
-# LanguageModel.py
+# Utility.py
 # CS124, Winter 2015, PA6: Machine Translation
 # 
 # Group members:
@@ -6,7 +6,7 @@
 #   Brad Huang (brad0309)
 #   Nick Moores (npmoores)
 #
-# This scripts builds the language models for English and Foreign languages.
+# This script contains utility functions for the translator and some post-processing functions.
 
 import sys, math, json, re
 from collections import defaultdict

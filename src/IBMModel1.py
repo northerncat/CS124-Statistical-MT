@@ -18,21 +18,29 @@
 # the algorithm in the SMT site computes.
 
 import sys
-import decimal
-#from decimal import Decimal
 import collections
-from copy import deepcopy
-from math import pow
 from collections import defaultdict
 
-decimal.getcontext().prec = 4
-decimal.getcontext().rounding = decimal.ROUND_HALF_UP
+names = []
+nameF = open('nombres')
+for line in nameF:
+	tokens = line.split(" ")
+	names.append(tokens[0].lower())
 
 def getT(t, e, f):
 	return t[e][f] if (e in t and f in t[e]) else float(0)
 
 def toRemove(string):
 	""" This function checks if the given string is a number (floating point or integer)! """
+	if names == []:
+		nameF = open('nombres')
+		for line in nameF:
+			tokens = line.split(" ")
+			names.append(tokens[0].lower())
+
+	if string in names:
+		return True
+
 	punct = [",", ".", "/", "?", "|", "\\", "%", "$", "^", "&", "*", "(", ")", "-", ";", "&quot;", "&apos;s", "&#93;", "...", "&apos;t", ".\n", "&quot;\n"]
 	for char in string:
 		if char.isdigit() or char in punct:

@@ -1,4 +1,4 @@
-# LanguageModel.py
+# PhraseTable.py
 # CS124, Winter 2015, PA6: Machine Translation
 # 
 # Group members:
@@ -6,7 +6,8 @@
 #   Brad Huang (brad0309)
 #   Nick Moores (npmoores)
 #
-# This scripts builds the language models for English and Foreign languages.
+# This script implements a phrase table based on the algorithm outlined in the 
+# class slides, with the exception that the distortion decay factor is not implemented.
 
 import IBMModel1
 import sys, math, collections, json, re
