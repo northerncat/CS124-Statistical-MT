@@ -6,14 +6,11 @@
 #   Brad Huang (brad0309)
 #   Nick Moores (npmoores)
 #
-# This script implements a phrase table based on the algorithm outlined in the 
-# class slides, with the exception that the distortion decay factor is not implemented.
+# This scripts builds the language models for English and Foreign languages.
 
-import IBMModel1
 import sys, math, collections, json, re
-#from decimal import Decimal
 from collections import defaultdict
-import Utility, LanguageModel
+import LanguageModel, IBMModel1, Utility, ntlkpos
 
 def getT(t, e, f): # t[e][f]
 	return IBMModel1.getT(t, e, f)
@@ -48,6 +45,8 @@ class PhraseTable:
 		else:
 			self.readPhraseTables(ptFile)
 
+	def getEphrase(self, fphrase):
+		return self.phraseTable[fphrase] if fphrase in self.phraseTable else ''
 
 	############ phrase table & probability table ###################
 
@@ -338,7 +337,7 @@ class PhraseTable:
 		#lmtResult, _ = self.LMT.translateSentence(fText)
 
 		# initializations
-		eText, fText = [], fText.split(' ')
+		eText, fText = [], Utility.removeEndingNewline(fText.split(' '))
 		ssftokens = [] # subsentence ftokens
 		for i, ftoken in enumerate(fText):
 			lftoken = ftoken.lower()
@@ -444,7 +443,7 @@ class PhraseTable:
 		log_prob, etokens = float(0), []
 		for ftokens in perm:
 			fphrase = ' '.join(ftokens)
-			ephrase = self.phraseTable[fphrase] if fphrase in self.phraseTable else ''
+			ephrase = self.getEphrase(fphrase)
 			log_prob += math.log(getP(self.phraseProbs, ephrase, fphrase))
 			etokens.append(ephrase)
 		# combine all ephrases. recall that permutation's fphrases are sorted by index

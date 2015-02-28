@@ -6,9 +6,9 @@
 #   Brad Huang (brad0309)
 #   Nick Moores (npmoores)
 #
-# This script contains utility functions for the translator and some post-processing functions.
+# This scripts builds the language models for English and Foreign languages.
 
-import sys, math, json, re
+import sys, math, json, re, string
 from collections import defaultdict
 import IBMModel1
 
@@ -60,6 +60,25 @@ def findSublist(sub, full):
 def isRangeOverlapped(x1, y1, x2, y2):
 	return (x1 <= x2 and x2 <= y1) or (x2 <= x1 and x1 <= y2)
 
+def removeEndingNewline(tokens):
+	last_token = tokens[-1]
+	last_char = last_token[-1]
+	if last_char == '\n' or last_char == '\r':
+		if len(last_token) == 1:
+			tokens = tokens[:-1]
+		else:
+			tokens[-1] = last_token[:-1]
+	return tokens
+
+def isFirstLetterCapital(token):
+	return token[0].isupper()
+
+def isAscii(token):
+	for ch in token:
+		if ch not in string.ascii_letters:
+			return False
+	return True
+
 # remove consecutive duplicate
 def removeConsecutiveDuplicate(tokens):
 	lst = []
@@ -77,32 +96,86 @@ def removeNULLfromCorpus(corpus):
 
 bundle2 = [('a', 'the'), ('an', 'the'), ('a', 'an'), ('a', 'a'), ('an', 'an'), ('the', 'the'),
 		   ('this', 'this'), ('that', 'that'), ('the', 'this'), ('the', 'that'), ('this', 'that'),
-		   ('it', 'we'), ('a', 'their'), ('a', 'his'), ('a', 'her') ]
+		   ('it', 'we'), ('a', 'their'), ('a', 'his'), ('a', 'her'), ('a', 'one'), ('an', 'one')
+		]
+
+AllCapitals = ['NATO']
+
+Nations = [ 'America', 'American', 'Austria', 'Austrian', 'Belgium', 'Europe', 'Asia', 'Africa', 'India',
+			'Britain', 'British', 'China', 'Chinese', 'Denmark', 'Danish',
+			'Finland', 'Finnish', 'Greece', 'Greek', 'Germany', 'German', 'France', 'French',
+			'Italy', 'Italian', 'Iraland', 'Irish', 'Japan', 'Japanese', 'Holland',
+			'Norway', 'Netherland', 'Poland', 'Polish', 'Portugal', 'Portuguese', 'Russia', 'Russian',
+			'Spain', 'Spanish', 'Switzerland', 'Swiss', 'Sweden', 'Swedish', 'Turk', 'Turkish', 'Ukraine', 'Ukranian',
+			'Libya'
+			]
+Months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+Capitalized = Nations + Months
 
 def finalTranslationTokensFixup(etokens):
 	"""Remove words that should not be together."""
 	if not etokens:
 		return etokens
-	first = etokens[0]
-	newtokens = [first.capitalize()] # keep the first one
+
+	# check for all captials (this does not improve BLEU score)
+	for i in xrange(len(etokens)):
+		for x in AllCapitals:
+			if etokens[i] == x.lower():
+				etokens[i] = x
+				break;
+	
+	# check for capitalized (this does not improve BLEU score)
+	for i in xrange(len(etokens)):
+		token = etokens[i]
+		token = token.capitalize()
+		for x in Capitalized:
+			if token == x:
+				etokens[i] = x
+				break;
+
+	# check for nonsense
+	newtokens = etokens[:1] # only first element
 	for i in xrange(1, len(etokens)):
+		e1, e2 = etokens[i].lower(), etokens[i-1].lower()
 		bad = False
 		for (w1, w2) in bundle2:
-			e1, e2 = etokens[i].lower(), etokens[i-1].lower()
 			if (e1 == w1 and e2 == w2) or (e1 == w2 and e2 == w1):
 				bad = True
 				break
 		if not bad:
-			newtokens.append(e1)
+			newtokens.append(etokens[i])
+	etokens = newtokens
+
+	# fix article from 'a' -> 'an' or 'an' -> a
+	vowels = ['a', 'e', 'i', 'o']
+	preps = ['as', 'at', 'in', 'it', 'of', 'on', 'only']
+	for i in xrange(0, len(etokens)-1):
+		curr, next = etokens[i], etokens[i+1]
+		next0 = next[0]
+		if curr == 'a':
+			if next0 in vowels and next not in preps:
+				etokens[i] = 'an'
+		elif curr == 'an':
+			if next0 not in vowels:
+				etokens[i] = 'a'
+
+	# first letter must be captical
+	newtokens[0] = newtokens[0].capitalize()
 	return newtokens
 
 
 fixup_patterns = [
+	(r'\, (a|the|an|this|that) \,', ','),
 	(r' (a|the|an|this|that)( ,)? a ',    ' a '),
 	(r' (a|the|an|this|that)( ,)? an ',   ' an '),
 	(r' (a|the|an|this|that)( ,)? the ',  ' the '),
 	(r' (a|the|an|this|that)( ,)? this ', ' this '),
-	(r' (a|the|an|this|that)( ,)? that ', ' that '),
+	(r' not we .', ' we not .'),
+	(r' not is ', ' is not '),
+	(r' not not ', ' not '),
+	(r' we we ', ' we '),
+	(r', was to ', ', it was to '),
 	]
 
 def finalTranslationStringFixup(esentence):
@@ -111,4 +184,5 @@ def finalTranslationStringFixup(esentence):
 	for (pat, repl) in fixup_patterns:
 		esentence = re.sub(pat, repl, esentence)
 	return esentence
+
 

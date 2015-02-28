@@ -8,11 +8,11 @@
 #
 # This scripts builds the language models for English and Foreign languages.
 
-import IBMModel1
+USING_NLTK = True
+
 import sys, math, collections, json, re
-#from decimal import Decimal
 from collections import defaultdict
-import Utility
+import IBMModel1, Utility, ntlkpos
 
 def getT(t, e, f): # t[e][f]
 	return IBMModel1.getT(t, e, f)
@@ -23,6 +23,7 @@ class LMTranslator:
 		self.t = t
 		self.corpus = corpus
 		self.eLM = eLM
+		self.ntlkpos = ntlkpos.NLTK_POS() if USING_NLTK else None
 		# parameters
 		self.nwords = 5
 		self.use_tp = True
@@ -30,6 +31,7 @@ class LMTranslator:
 		self.use_bigram = False
 		# build dictionary
 		self.fWordsNotFound = []
+		self.fWordNotTranslated = []
 		if dict1 is None or dict2 is None:
 			self.buildDictionary()
 			Utility.writeDictionary(self.dict1, '../output/LMT.dict1')
@@ -37,12 +39,19 @@ class LMTranslator:
 		else:
 			self.dict1 = Utility.readDictionary(dict1)
 			self.dict2 = Utility.readDictionary(dict2)
-		Utility.outputObject('../output/foreign_words_not_found', self.fWordsNotFound)
+
+	def shutdown(self):
+		fWordsNotFound = sorted(list(set(self.fWordsNotFound)))
+		fWordNotTranslated = sorted(list(set(self.fWordNotTranslated)))
+		Utility.outputObject('../output/foreign_words_not_found_in_T', fWordsNotFound)
+		Utility.outputObject('../output/foreign_words_not_translated', fWordNotTranslated)
+		if self.ntlkpos:
+			Utility.outputObject('../output/adjective_noun_swaps', self.ntlkpos.adjectiveNounSwaps)
 
 	def translateSentence(self, fText):
 		""" Pick the best translation based on the probabilities calculated from the EM algorithm
 			and the language model (trigram)."""
-		eText, fText = [], fText.split(' ')
+		eText, fText = [], Utility.removeEndingNewline(fText.split(' '))
 		prev1, prev2 = '<S>', '<S>'
 		for i, ftoken in enumerate(fText):
 			lftoken = ftoken.lower()
@@ -58,7 +67,11 @@ class LMTranslator:
 					etoken1, etoken2 = self.translateWord(lftoken)
 				# if the fWord points to NULL, jump to next word
 				if etoken1 == 'NULL':
-				    continue
+					if len(ftoken) > 1 and Utility.isFirstLetterCapital(ftoken): #  and Utility.isAscii(ftoken)
+						etoken1 = ftoken
+					else:
+						self.fWordNotTranslated.append(ftoken)
+						continue
 				# get the translation probability for eToken1 and eToken2
 				us1 = self.eLM.scoreUnigram(etoken1) if self.use_unigram else float(1)
 				tp1 = getT(self.t, etoken1, ftoken) if self.use_tp else float(1)
@@ -92,6 +105,13 @@ class LMTranslator:
 		# final translation fixup
 		etokens = Utility.finalTranslationTokensFixup(etokens)
 		esentence = ' '.join(etokens)
+		# pos tagging
+		if self.ntlkpos:
+			pos_tags = self.ntlkpos.tag(etokens)
+			if pos_tags:
+				etokens, _ = self.ntlkpos.postprocessing(etokens, pos_tags)
+				esentence = ' '.join(etokens)
+		# final fixup
 		esentence = Utility.finalTranslationStringFixup(esentence)
 		return esentence, score
 
@@ -265,6 +285,7 @@ def main():
 	fTest.close()
 	output.close()
 	outlm.close()
+	LMT.shutdown()
 
 
 if __name__ == "__main__":

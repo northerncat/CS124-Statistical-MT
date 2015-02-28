@@ -1,4 +1,4 @@
-# Baseline_EM.py
+# Baseline.py
 # CS124, Winter 2015, PA6: Machine Translation
 # 
 # Group members:
@@ -9,10 +9,8 @@
 # This scripts performs the translation using only the probabilities obtained
 # from IBM Model 1.
 
-import IBMModel1
 import sys
-#from decimal import Decimal
-import Utility
+import IBMModel1, Utility, ntlkpos
 
 def getT(t, i, j): # t[i][j]
 	return IBMModel1.getT(t, i, j)

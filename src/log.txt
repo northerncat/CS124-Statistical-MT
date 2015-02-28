@@ -1,0 +1,24 @@
+Language Model
+
+BLEU-1 score: 49.750610
+BLEU-2 score: 11.193097
+
+BLEU-1 score: 51.086509
+BLEU-2 score: 12.071741
+
+BLEU-1 score: 51.750534
+BLEU-2 score: 12.428540
+
+BLEU-1 score: 51.750534		no nltk = BLEU-1 score: 51.750534
+BLEU-2 score: 12.412765		no nltk = BLEU-2 score: 11.926463
+
+BLEU-1 score: 51.738094
+BLEU-2 score: 12.432269
+
+Phrase Table:
+
+BLEU-1 score: 42.833932
+BLEU-2 score: 7.283034
+
+BLEU-1 score: 43.381227
+BLEU-2 score: 7.467838
