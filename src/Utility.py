@@ -152,13 +152,14 @@ def finalTranslationTokensFixup(etokens):
 	preps = ['as', 'at', 'in', 'it', 'of', 'on', 'only']
 	for i in xrange(0, len(etokens)-1):
 		curr, next = etokens[i], etokens[i+1]
-		next0 = next[0]
-		if curr == 'a':
-			if next0 in vowels and next not in preps:
-				etokens[i] = 'an'
-		elif curr == 'an':
-			if next0 not in vowels:
-				etokens[i] = 'a'
+		if len(next) > 0:
+			next0 = next[0]
+			if curr == 'a':
+				if next0 in vowels and next not in preps:
+					etokens[i] = 'an'
+			elif curr == 'an':
+				if next0 not in vowels:
+					etokens[i] = 'a'
 
 	# first letter must be captical
 	newtokens[0] = newtokens[0].capitalize()
