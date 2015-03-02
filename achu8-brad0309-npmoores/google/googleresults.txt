@@ -1,24 +1,77 @@
 ﻿1.
-Spanish: Este abogado de 48 años especializado en derechos humanos y presidente de la Organización Egipcia de Derechos Humanos ( EOHR ) defendió a los hermanos musulmanes cuando se encontraban retenidos en prisión o tuvieron que hacer frente a un juicio durante la dictadura de Mubarak .
-Google Translation: This attorney for 48 years specializing in human rights and president of the Egyptian Organization for Human Rights (EOHR) defended the Muslim brothers when they were held in prison or had to deal with a trial during the dictatorship of Mubarak.
-Our Translation: This lawyer of 48 years specialises in rights human and President of the organisation Egyptian of human rights ( EOHR ) for to the Muslim Muslims when who held in prison or had that to with to a trial for the dictatorship of Mubarak .
 
-2.
-Spanish: &quot; Pero el petróleo no es la única razón por la que nos va tan bien &quot; , afirma Anna , nuestra camarera , mientras va pasando bandejas de rakfisk y que , con su larga melena rubia y sus sorprendentes ojos azules , representa la imagen del bienestar noruego .
-Google Translation: \& quot; But oil is not the only reason why it is going so well \& quot; Says Anna, our waitress, while passing trays rakfisk and, with her long blonde hair and striking blue eyes, represents the image of the Norwegian welfare. 
-Our Translation: \&quot; but the oil is not the only reason the we is so well \&quot; , says Anna , our , while is happening explained of and that , with their long and their surprising blue eyes , represents the image the welfare Norwegian . 
+Spanish:
+Este abogado de 48 años especializado en derechos humanos y presidente de la Organización Egipcia de Derechos Humanos ( EOHR ) defendió a los hermanos musulmanes cuando se encontraban retenidos en prisión o tuvieron que hacer frente a un juicio durante la dictadura de Mubarak .
+
+Google Translation:
+This attorney for 48 years specializing in human rights and president of the Egyptian Organization for Human Rights (EOHR) defended the Muslim brothers when they were held in prison or had to deal with a trial during the dictatorship of Mubarak.
+
+Our Translation:
+This lawyer of 48 years specialises in rights human and President of the organisation Egyptian of human rights ( EOHR ) for to the Muslim Muslims when who held in prison or had that to with to a trial for the dictatorship of Mubarak .
+
+Actual Translation:
+The 48-year-old human rights lawyer and Chairman of the Egyptian Organisation for Human Rights ( EOHR ) defended the Muslim Brotherhood , when imprisoned or in court under Mubarak .
+
+
+
+2. 
+
+Spanish:
+&quot; Pero el petróleo no es la única razón por la que nos va tan bien &quot; , afirma Anna , nuestra camarera , mientras va pasando bandejas de rakfisk y que , con su larga melena rubia y sus sorprendentes ojos azules , representa la imagen del bienestar noruego .
+
+Google Translation:
+& quot; But oil is not the only reason why it is going so well & quot; Says Anna, our waitress, while passing trays rakfisk and, with her long blonde hair and striking blue eyes, represents the image of the Norwegian welfare.
+
+Our Translation:
+&quot; but the oil is not the only reason the we is so well &quot; , says Anna , our , while is happening explained of and that , with their long and their surprising blue eyes , represents the image the welfare Norwegian .
+
+Actual Translation:
+&quot; But oil is not the only reason we are doing so well , &quot; says Anna our waitress , handing round trays of maturing rakfisk and , with her long blond hair and startlingly blue eyes , the image of Nordic well-being .
+
+
 
 3.
-Spanish: Hombres y mujeres mencionan su carrera , el estrés y el costo de las propiedades y de la educación como los motivos que les impiden tener hijos .
-Google Translation: Men and women mention his career, stress and cost of property and education as reasons that prevent them from having children. 
-Our Translation: Men and women mention their career , the stress and the costs of the properties and of the education as the for that them from have children . 
+
+Spanish:
+Hombres y mujeres mencionan su carrera , el estrés y el costo de las propiedades y de la educación como los motivos que les impiden tener hijos .
+
+Google Translation:
+Men and women mention his career, stress and cost of property and education as reasons that prevent them from having children.
+
+Our Translation:
+Men and women mention their career , the stress and the costs of the properties and of the education as the for that them from have children .
+
+Actual Translation:
+Men and women alike mention their careers , stress and the cost of property and education as the reasons preventing them from having children .
+
+
 
 4.
-Spanish: Las medidas adoptadas desde 2009 lograron que la tasa de inscripción de nuevos electores cayera en 2010 en comparación con el año 2006 .
-Google Translation: The measures taken since 2009 ensured that the rate of registration of new voters fell in 2010 compared with 2006. 
-Our Translation: The measures taken since 2009 succeed that rate of for of new electorate out in 2010 in compared with the year 2006 . 
+
+Spanish:
+Las medidas adoptadas desde 2009 lograron que la tasa de inscripción de nuevos electores cayera en 2010 en comparación con el año 2006 .
+
+Google Translation:
+The measures taken since 2009 ensured that the rate of registration of new voters fell in 2010 compared with 2006.
+
+Our Translation:
+The measures taken since 2009 succeed that rate of for of new electorate out in 2010 in compared with the year 2006 .
+
+Actual Translation:
+However , the measures adopted since 2009 have led to a 17 % drop in the registration rate of new voters in 2010 compared to 2006 .
+
+
 
 5.
-Spanish: El primer ministro dijo recientemente que la ODS ( Partido Democrático Cívico ) no molestaría a los empresarios con inspectores . Entonces , ¿ está prohibido o permitido ?
-Google Translation: The Prime Minister recently said the ODS (Civic Democratic Party) would not bother entrepreneurs with inspectors. So what is prohibited or permitted? 
-Our Translation: The first Minister said recently that ODS ( democratic civic party ) not to the employers with inspectors . then , is ban or allowed ?
+
+Spanish:
+El primer ministro dijo recientemente que la ODS ( Partido Democrático Cívico ) no molestaría a los empresarios con inspectores . Entonces , ¿ está prohibido o permitido ?
+
+Google Translation:
+The Prime Minister recently said the ODS (Civic Democratic Party) would not bother entrepreneurs with inspectors. So what is prohibited or permitted?
+
+Our Translation:
+The first Minister said recently that ODS ( democratic civic party ) not to the employers with inspectors . then , is ban or allowed ?
+
+Actual Translation:
+The Prime Minister recently claimed that the ODS will not be burdening business owners with its checks - so is it forbidden or allowed ?
