@@ -10,7 +10,7 @@
 # from IBM Model 1.
 
 import sys
-import IBMModel1, Utility, ntlkpos
+import IBMModel1, Utility, nltkpos
 
 def getT(t, i, j): # t[i][j]
 	return IBMModel1.getT(t, i, j)

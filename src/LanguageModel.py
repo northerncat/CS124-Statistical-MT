@@ -12,7 +12,7 @@ USING_NLTK = True
 
 import sys, math, collections, json, re
 from collections import defaultdict
-import IBMModel1, Utility, ntlkpos
+import IBMModel1, Utility, nltkpos
 
 def getT(t, e, f): # t[e][f]
 	return IBMModel1.getT(t, e, f)
@@ -23,7 +23,7 @@ class LMTranslator:
 		self.t = t
 		self.corpus = corpus
 		self.eLM = eLM
-		self.ntlkpos = ntlkpos.NLTK_POS() if USING_NLTK else None
+		self.nltkpos = nltkpos.NLTK_POS() if USING_NLTK else None
 		# parameters
 		self.nwords = 5
 		self.use_tp = True
@@ -45,8 +45,8 @@ class LMTranslator:
 		fWordNotTranslated = sorted(list(set(self.fWordNotTranslated)))
 		Utility.outputObject('../output/foreign_words_not_found_in_T', fWordsNotFound)
 		Utility.outputObject('../output/foreign_words_not_translated', fWordNotTranslated)
-		if self.ntlkpos:
-			Utility.outputObject('../output/adjective_noun_swaps', self.ntlkpos.adjectiveNounSwaps)
+		if self.nltkpos:
+			Utility.outputObject('../output/adjective_noun_swaps', self.nltkpos.adjectiveNounSwaps)
 
 	def translateSentence(self, fText):
 		""" Pick the best translation based on the probabilities calculated from the EM algorithm
@@ -106,10 +106,10 @@ class LMTranslator:
 		etokens = Utility.finalTranslationTokensFixup(etokens)
 		esentence = ' '.join(etokens)
 		# pos tagging
-		if self.ntlkpos:
-			pos_tags = self.ntlkpos.tag(etokens)
+		if self.nltkpos:
+			pos_tags = self.nltkpos.tag(etokens)
 			if pos_tags:
-				etokens, _ = self.ntlkpos.postprocessing(etokens, pos_tags)
+				etokens, _ = self.nltkpos.postprocessing(etokens, pos_tags)
 				esentence = ' '.join(etokens)
 		# final fixup
 		esentence = Utility.finalTranslationStringFixup(esentence)
