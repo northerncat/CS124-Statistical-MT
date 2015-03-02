@@ -1,0 +1,29 @@
+Dev Set
+
+Baseline
+BLEU-1 score: 47.679591
+BLEU-2 score: 9.184847
+
+Language Model
+BLEU-1 score: 51.738094
+BLEU-2 score: 12.432269
+
+Phrase Table
+BLEU-1 score: 43.363294
+BLEU-2 score: 7.473218
+
+----------------------------------
+
+Test Set
+
+Baseline
+BLEU-1 score: 49.231242
+BLEU-2 score: 9.588512
+
+Language Model
+BLEU-1 score: 51.361771
+BLEU-2 score: 11.594961
+
+Phrase Table
+BLEU-1 score: 45.348389
+BLEU-2 score: 8.593964
